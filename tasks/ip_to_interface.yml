@@ -1,0 +1,70 @@
+- name: "include our ip facts file from the local machine {{ nova_server_facts_template_ip_facts }}"
+  include_vars:
+    file: "{{ nova_server_facts_template_ip_facts }}"
+
+#- debug: msg="interface list {{ ansible_interfaces | difference(nova_server_facts_ignore_interface_list) }}"
+#- debug: msg="nova_server_public_ip_fact {{ nova_server_public_ip_fact }}"
+
+# - debug:
+#     msg: "{{ ansible_interfaces }}"
+
+- name: use nova_server_public_ip_fact to assign an interface name to nova_server_facts_public_interface_name
+  set_fact:
+    nova_server_facts_public_interface_name: "{{ item }}"
+  when: ( item | regex_search('(eth|bond).*') ) and hostvars[inventory_hostname][ 'ansible_'+ item ]['ipv4']['address'] == nova_server_public_ip_fact
+  with_items:
+    - "{{ ansible_interfaces | difference(nova_server_facts_ignore_interface_list) }}"
+  loop_control:
+    label: hostvars[inventory_hostname][ 'ansible_'+ item ]
+
+# - debug:
+#     msg: "{{ nova_server_facts_public_interface_name }}"
+#
+
+- name: use nova_server_servnet_ip_fact to assign an interface name to nova_server_facts_servnet_interface_name
+  set_fact:
+    nova_server_facts_servnet_interface_name: "{{ item }}"
+  when: ( item | regex_search('(eth|bond).*') ) and hostvars[inventory_hostname][ 'ansible_'+ item ]['ipv4']['address'] == nova_server_servnet_ip_fact
+  with_items:
+    - "{{ ansible_interfaces | difference(nova_server_facts_ignore_interface_list) }}"
+  loop_control:
+    label: hostvars[inventory_hostname][ 'ansible_'+ item ]
+
+- name: use nova_server_private_ip_fact to assign an interface name to nova_server_facts_private_interface_name
+  set_fact:
+    nova_server_facts_private_interface_name: "{{ item }}"
+  when: ( item | regex_search('(eth|bond).*') ) and hostvars[inventory_hostname][ 'ansible_'+ item ]['ipv4']['address'] == nova_server_private_ip_fact
+  with_items:
+    - "{{ ansible_interfaces | difference(nova_server_facts_ignore_interface_list) }}"
+  loop_control:
+    label: hostvars[inventory_hostname][ 'ansible_'+ item ]
+
+- name: "Create custom fact directory"
+  file:
+    path: "/etc/ansible/facts.d"
+    state: "directory"
+
+- name: "write out a fact file for the public"
+  template:
+    src: public_interface.fact.j2
+    dest: "/etc/ansible/facts.d/public_interface.fact"
+    mode: '0755'
+
+- name: "write out a fact file for the servnet"
+  template:
+    src: servnet_interface.fact.j2
+    dest: "/etc/ansible/facts.d/servnet_interface.fact"
+    mode: '0755'
+
+- name: "write out a fact file for the private"
+  template:
+    src: private_interface.fact.j2
+    dest: "/etc/ansible/facts.d/private_interface.fact"
+    mode: '0755'
+
+- name: "Re-run setup to use custom facts"
+  setup:
+    filter: ansible_local
+
+# - debug: msg="{{ hostvars[inventory_hostname] }}"
+

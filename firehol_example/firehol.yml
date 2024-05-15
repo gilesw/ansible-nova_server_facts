@@ -1,0 +1,21 @@
+# Baremetal iov2
+firehol_interfaces:
+  # public
+  - interface: "{{ ansible_local.public_interface.interface_name | default('eth2') }} pub"
+    client_rules:
+      - "all accept"
+    server_rules:
+      - 'all deny' # disable all public inbound traffic
+
+  # servnet
+  - interface: "{{ ansible_local.servnet_interface.interface_name | default('eth2') }} snet"
+    client_rules:
+      - "all accept"
+    server_rules:
+      - 'all deny' # disable traffic on servnet, only needed for CLB's
+
+  # private only to account owner
+  - interface: "{{ ansible_local.private_interface.interface_name | default('eth2') }} prv"
+    other_rules:
+      - "policy accept"
+

@@ -1,0 +1,11 @@
+- name: "Check that ip facts exist ( may need to re-run nova_server) {{ nova_server_facts_template_ip_facts }}"
+  stat:
+    path: "{{ nova_server_facts_template_ip_facts }}"
+  register: nova_server_facts_template_ip_facts_result
+  delegate_to: 127.0.0.1
+  become: no
+
+- block:
+    - import_tasks: ip_to_interface.yml
+      when: nova_server_facts_template_ip_facts_result.stat.exists
+

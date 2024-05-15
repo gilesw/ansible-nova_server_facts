@@ -1,0 +1,7 @@
+nova_server_facts_stack_name: "{{ inventory_hostname }}"
+nova_server_facts_template_ip_facts: "{{ inventory_dir }}/.files/nova_server/built/{{ nova_server_facts_stack_name }}_ip_facts.yml"
+nova_server_facts_template_interface_facts:  "{{ inventory_dir }}/.files/nova_server/built/{{ nova_server_facts_stack_name }}_interface_facts.yml"
+
+nova_server_facts_ignore_interface_list:
+  - lo
+
